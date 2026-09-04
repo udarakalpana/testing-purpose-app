@@ -1,0 +1,67 @@
+name: Backend Tests
+
+on:
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: backend-tests-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  pest:
+    name: Pest
+    runs-on: ubuntu-latest
+
+    # phpunit.xml pins the suite to the "mysql_test" connection, so the suite
+    # needs a real MySQL server rather than the sqlite default in .env.example.
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
+          MYSQL_DATABASE: rlds_app_db_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: ''
+
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, bcmath, intl
+          coverage: none
+
+      - name: Create the environment file
+        run: cp .env.example .env
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-php8.4-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php8.4-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Generate the application key
+        run: php artisan key:generate
+
+      - name: Run the test suite
+        run: php artisan test
