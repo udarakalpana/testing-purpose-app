@@ -1,1 +1,43 @@
-<?phpnamespace App\Http\Controllers\Auth;use App\Actions\Auth\AuthenticateUser;use App\Http\Controllers\Controller;use App\Http\Requests\Auth\LoginRequest;use Illuminate\Http\JsonResponse;use Illuminate\Http\Request;class AuthController extends Controller{    /**     * Exchange a set of credentials for an API token.     */    public function login(LoginRequest $request, AuthenticateUser $authenticateUser): JsonResponse    {        ['user' => $user, 'token' => $token] = $authenticateUser->handle(            $request->string('email')->toString(),            $request->string('password')->toString(),            $request->userAgent() ?? 'unknown',        );        return response()->json([            'token' => $token,            'user' => [                'id' => $user->id,                'name' => $user->name,                'email' => $user->email,            ],        ]);    }    /**     * Revoke the token that authenticated this request, leaving the tokens     * issued to the user's other devices in place.     */    public function logout(Request $request): JsonResponse    {        $request->user()->currentAccessToken()->delete();        return response()->json(status: 204);    }}
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Actions\Auth\AuthenticateUser;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class AuthController extends Controller
+{
+    /**
+     * Exchange a set of credentials for an API token.
+     */
+    public function login(LoginRequest $request, AuthenticateUser $authenticateUser): JsonResponse
+    {
+        ['user' => $user, 'token' => $token] = $authenticateUser->handle($request->string('email')->toString(),
+            $request->string('password')->toString(),
+            $request->userAgent() ?? 'unknown',
+        );
+
+        return response()->json([
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+        ]);
+    }
+
+    /**
+     * Revoke the token that authenticated this request, leaving the tokens
+     * issued to the user's other devices in place.
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(status: 204);
+    }
+}
