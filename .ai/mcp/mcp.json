@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "/opt/homebrew/Cellar/php@8.2/8.2.30/bin/php",
+      "args": [
+        "/Users/kalpana/Sites/testing-purpose-app/artisan",
+        "boost:mcp"
+      ]
+    }
+  }
+}
