@@ -1,1 +1,34 @@
-<?phpnamespace App\Http\Requests\Auth;use Illuminate\Foundation\Http\FormRequest;class LoginRequest extends FormRequest{    /**     * Determine if the user is authorized to make this request.     *     * Signing in is a public action, so there is nothing to authorize.     */    public function authorize(): bool    {        return true;    }    /**     * Get the validation rules that apply to the request.     *     * No `exists:users` rule: a validation message that fires only for unknown     * addresses would confirm which emails hold an account.     *     * @return array<string, list<string>>     */    public function rules(): array    {        return [            'email' => ['required', 'string', 'email'],            'password' => ['required', 'string'],        ];    }}
+<?php
+
+namespace App\Http\Requests\Auth;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class LoginRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * Signing in is a public action, so there is nothing to authorize.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * No `exists:users` rule: a validation message that fires only for unknown
+     * addresses would confirm which emails hold an account.
+     *
+     * @return array<string, list<string>>
+     */
+    public function rules(): array
+    {
+        return [
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
+        ];
+    }
+}
