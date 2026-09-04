@@ -17,11 +17,23 @@ it('returns a token and the user for valid credentials', function () {
     $response->assertOk()
         ->assertJsonPath('user.id', $user->id)
         ->assertJsonPath('user.name', $user->name)
-        ->assertJsonPath('user.email', 'valid@example.com');
+        ->assertJsonPath('user.email', 'valid@example.com')
+        ->assertJsonPath('user.role', 'user');
 
     expect($response->json('token'))->toBeString()->not->toBeEmpty()
-        ->and(array_keys($response->json('user')))->toBe(['id', 'name', 'email'])
+        ->and(array_keys($response->json('user')))->toBe(['id', 'name', 'email', 'role'])
         ->and($user->tokens()->count())->toBe(1);
+});
+
+it('returns the admin role for an administrator', function () {
+    User::factory()->admin()->create(['email' => 'admin@example.com']);
+
+    $this->postJson('/api/login', [
+        'email' => 'admin@example.com',
+        'password' => 'password',
+    ])
+        ->assertOk()
+        ->assertJsonPath('user.role', 'admin');
 });
 
 it('returns 422 and issues no token for a wrong password', function () {

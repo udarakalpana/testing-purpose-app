@@ -1,20 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { AxiosError } from 'axios';
 import api from '../../lib/axios';
+import type { ApiFailure, FieldErrors } from '../../lib/apiError';
+import { toApiFailure } from '../../lib/apiError';
 import type { AuthUser } from '../../lib/storage';
 import { clearStoredSession, readStoredToken, readStoredUser, storeSession } from '../../lib/storage';
-
-export type FieldErrors = Record<string, string[]>;
-
-type SignInFailure = {
-  message: string;
-  fieldErrors: FieldErrors | null;
-};
-
-type LaravelErrorBody = {
-  message?: string;
-  errors?: FieldErrors;
-};
 
 export type AuthState = {
   token: string | null;
@@ -32,37 +21,10 @@ const initialState: AuthState = {
   fieldErrors: null,
 };
 
-/**
- * Turn an Axios rejection into something the sign-in form can render.
- *
- * The API answers 422 for both a malformed email and a wrong password, and 429
- * once the login throttle trips, so the message and the per-field errors are
- * kept separate.
- */
-function toSignInFailure(error: unknown): SignInFailure {
-  if (error instanceof AxiosError) {
-    if (!error.response) {
-      return {
-        message: 'Could not reach the server. Check your connection and try again.',
-        fieldErrors: null,
-      };
-    }
-
-    const body = error.response.data as LaravelErrorBody;
-
-    return {
-      message: body.message ?? 'Something went wrong. Please try again.',
-      fieldErrors: body.errors ?? null,
-    };
-  }
-
-  return { message: 'Something went wrong. Please try again.', fieldErrors: null };
-}
-
 export const signIn = createAsyncThunk<
   { token: string; user: AuthUser },
   { email: string; password: string },
-  { rejectValue: SignInFailure }
+  { rejectValue: ApiFailure }
 >('auth/signIn', async (credentials, { rejectWithValue }) => {
   try {
     const { data } = await api.post<{ token: string; user: AuthUser }>('/api/login', credentials);
@@ -71,7 +33,7 @@ export const signIn = createAsyncThunk<
 
     return data;
   } catch (error) {
-    return rejectWithValue(toSignInFailure(error));
+    return rejectWithValue(toApiFailure(error));
   }
 });
 
