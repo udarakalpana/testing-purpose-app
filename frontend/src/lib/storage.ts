@@ -1,10 +1,13 @@
 const TOKEN_KEY = 'rlda.token';
 const USER_KEY = 'rlda.user';
 
+export type UserRole = 'admin' | 'user';
+
 export type AuthUser = {
   id: string;
   name: string;
   email: string;
+  role: UserRole;
 };
 
 /**
